@@ -4,7 +4,7 @@ import socket
 
 #print("테스트")
 client = socket.socket()
-client.connect(('203.252.240.64',22))
+client.connect(('203.252.240.64',2578))
 py_serial = serial.Serial(
     port='/dev/ttyUSB0',
     baudrate=9600,

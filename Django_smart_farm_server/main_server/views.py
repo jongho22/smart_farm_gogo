@@ -1,24 +1,33 @@
 from http.client import HTTPResponse
 from django.shortcuts import render
+import paho.mqtt.client as mqtt
 
-#서버
-from datetime import datetime
-import time
-import socket
-from .socket_server import sensor_log
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("클라이언트와 연결 되었습니다.")
+    else:
+        print("Bad connection Returned code=", rc)
 
-# 서버 실행
-under_text = "_"*50
-server = socket.socket()
-print('[소켓 생성완료]')
-s_name = socket.gethostname()
-print('서버 컴퓨터이름:', s_name)
-server.bind(('203.252.240.64', 2578))
-server.listen(3)
-print('서버 리스닝...')
 
-client, address = server.accept()
-print(f"[클라이언트와 연결 되었습니다] => {address}\n{under_text}")
+def on_disconnect(client, userdata, flags, rc=0):
+    print("연결이 해제 되었습니다.")
+
+
+def on_subscribe(client, userdata, mid, granted_qos):
+    print("연결 상태 : " + str(mid) + " " + str(granted_qos))
+
+
+def on_message(client, userdata, msg):
+    print(str(msg.payload.decode("utf-8")))
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_disconnect = on_disconnect
+client.on_subscribe = on_subscribe
+client.on_message = on_message
+client.connect('broker.hivemq.com', 1883)
+client.subscribe('test/send_data', 1)
+client.loop_forever()
 
 # Create your views here.
 def index(request):
