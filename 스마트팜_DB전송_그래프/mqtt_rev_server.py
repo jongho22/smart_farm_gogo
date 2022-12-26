@@ -1,6 +1,9 @@
 import paho.mqtt.client as mqtt
 import pymongo
-from datetime import datetime
+from datetime import datetime,date
+import asyncio
+from time import sleep
+
 
 #파이썬에서 mongodb로 연결한다. 27017은 mongodb에서 설정한 포트번호
 connect_to = pymongo.MongoClient("localhost",27017) 
@@ -32,11 +35,14 @@ def on_message(client, userdata, msg):
     data_split =str(msg.payload.decode("utf-8")).split(" ")
     
     # 데이터를 수신 받으 시간
-    data_rev_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
+    now = datetime.now()
+    time = now.strftime('%Y-%m-%d %H:%M:%S')
+    data_rev_date = now.strptime(time,'%Y-%m-%d %H:%M:%S')
+    
+    
     # 값 분배
     data = {
-            "rev_time" : data_rev_time,
+            "rev_date" : data_rev_date,
             "temp": data_split[0],
             "humi": data_split[1],
         }
@@ -44,7 +50,8 @@ def on_message(client, userdata, msg):
     # DB에 data 저장
     collection.insert_one(data)
 
-    print(f"{data_rev_time} => Data 저장 성공")
+    print(f"{data_rev_date} => Data 저장 성공")
+    #sleep(60)
     #print(str(msg.payload.decode("utf-8")))
 
 # 새로운 클라이언트 생성
@@ -61,6 +68,12 @@ client.on_message = on_message
 client.connect('broker.hivemq.com', 1883)
 
 # test/send_data 라는 topic 구독
-client.subscribe('test/send_data', 1)
+client.subscribe('test/send_data', 1) 
+
 client.loop_forever()
+#sleep(60)
+
+
+
+    
 

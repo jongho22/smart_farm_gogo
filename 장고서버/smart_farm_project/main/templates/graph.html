@@ -170,7 +170,7 @@
                                 <div class="card mb-4">
                                     <div class="card-header">
                                         <i class="fas fa-chart-area me-1"></i>
-                                        실시간 온습도 센서 값 (Update => 1min)
+                                        실시간 온습도 센서 값
                                     </div>
                                     <div class="card-body"><canvas id = "canvas"></canvas></div>
                                         <!--<canvas id="myAreaChart" width="100%" height="40"></canvas>-->
@@ -180,9 +180,9 @@
                                 <div class="card mb-4">
                                     <div class="card-header">
                                         <i class="fas fa-chart-bar me-1"></i>
-                                        전체 온습도 센서 값 (Update => 5min)
+                                        없음
                                     </div>
-                                    <div class="card-body"><canvas id = "canvas2"></canvas></div>
+                                    <div class="card-body"><canvas id="temp_humi_Chart"></canvas></div>
                                 </div>
                             </div>
                             <div class="col-xl-6">
@@ -227,7 +227,7 @@
                                 <div class="row">
                                     <div class="col-6">
                                         <i class="fas fa-table me-1"></i>
-                                        온습도 DB 저장 현황 [ {{start_date}} ~ {{end_date}} ]
+                                        온습도 DB 저장 현황 {{start_date}} ~ {{end_date}}
                                     </div>
                                     <div class="col-6">
                                         <form action="/" method="post">
@@ -249,23 +249,26 @@
                                 </div>
                             </div>
                             <div class="card-body">
+                                <div class="card-body"><canvas id = "canvas2"></canvas></div>
                                 <table class="table">
                                     <thead>
                                       <tr>
-                                        <th scope="col">날짜 / 시간</th>
+                                        <th scope="col">날짜</th>
+                                        <th scope="col">시간</th>
                                         <th scope="col">온도</th>
                                         <th scope="col">습도</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                         {% for i in data %}
-                                        
+                                        {% if i.rev_date in time %}
                                         <tr>
                                             <td scope="row">{{i.rev_date}}</td>
+                                            <td>{{i.rev_time}}</td>
                                             <td>{{i.temp}}</td>
                                             <td>{{i.humi}}</td>
                                         </tr>
-                                        
+                                        {% endif %}
                                         {% endfor %}
 
                                     </tbody>
@@ -299,7 +302,7 @@
         -->
         <script src="../static/js/datatables-simple-demo.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" crossorigin="anonymous"></script>
-
+        
         <script>
             $(document).ready(function() {
                 const config ={
@@ -366,11 +369,11 @@
                 
                 const context = document.getElementById('canvas').getContext('2d');
                 const lineChart = new Chart(context, config);
-                const source = new EventSource("/graph")
+                const source = new EventSource("chart_data/")
                 
                 source.onmessage = function(event) {
                     const data = JSON.parse(event.data);
-                    if (config.data.labels.length === 30) {
+                    if (config.data.labels.length === 20) {
                         config.data.labels.shift();
                         config.data.datasets[0].data.shift();
                         config.data.datasets[1].data.shift();
@@ -396,7 +399,6 @@
                             borderColor: 'rgb(255,51,51)',
                             data : [],
                             fill : false,
-                            pointRadius:0,
                         },{
                             label : "습도",
                             yAxisID: "B",
@@ -404,14 +406,13 @@
                             borderColor: 'rgb(51,153,255)',
                             data : [],
                             fill : false,
-                            pointRadius:0,
                         }]
                     },
                     options : {
                         responsive : true,
                         title : {
                             display : true,
-                            text : "온습도 전체 데이터"
+                            text : "온습도 값 DB 조회"
                         },
                         scales : {
                             xAxes : [{
@@ -445,27 +446,10 @@
                         hover : {
                             mode: 'nearest',
                             intersect: true
-                        },
+                        }
                     }
                 };
-                const context = document.getElementById('canvas2').getContext('2d');
-                const lineChart = new Chart(context, config);
-                const source = new EventSource("/graph2")
-
-                source.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                   
-                    if (config.data.labels.length >= data.num) {
-                        config.data.labels.shift();
-                        config.data.datasets[0].data.shift();
-                        config.data.datasets[1].data.shift();
-                    }
-                    config.data.labels.push(data.date);
-                    config.data.datasets[0].data.push(data.value1);
-                    config.data.datasets[1].data.push(data.value2);
-                    lineChart.update();
-                    
-                }
+                
             });
         </script>
 

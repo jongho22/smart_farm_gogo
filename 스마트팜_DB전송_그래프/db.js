@@ -1,0 +1,15 @@
+import mongoose from "mongoose";
+
+mongoose.connect("mongodb://localhost:27017/dh-tube", {
+  useNewUrlParser: true,
+  useFindAndModify: false
+});
+
+//MongoDB와의 연결을 db로 저장
+const db = mongoose.connection;
+
+const handleOpen = () => console.log("✅Connected to DB");
+const handleError = () => console.log(`❌ Error on DB Connection:${error}`);
+
+db.once("open", handleOpen);
+db.on("eroor", handleError);
