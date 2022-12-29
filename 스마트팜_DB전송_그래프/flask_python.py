@@ -1,13 +1,21 @@
-#import paho.mqtt.client as mqtt
-#import pymongo
+import paho.mqtt.client as mqtt
+import pymongo
 
 from flask import *
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 
 import json
-import time
 
+from time import time
+from time import sleep
+
+from actuator_send import mqtt_actuator
+from sensor_rev import Sensor
+
+from threading import Thread
+
+#센서 mqtt
 
 app = Flask(__name__)
 
@@ -29,6 +37,7 @@ def date_range(start, end):
 @app.route('/',methods=['POST','GET'])
 def graph() :
     if request.method == 'POST':
+        # if request.form['inquiry'] == "조회":
         start_date = request.form['start_date']
         end_date = request.form['end_date']
 
@@ -39,13 +48,12 @@ def graph() :
         end_date = end_date+timedelta(days=1)
 
         results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1)
-
         return render_template('index.html',data=results,start_date = send_start_date ,end_date = send_end_date)
+
     if request.method == 'GET':
         return render_template('index.html')
 
 # 실시간 그래프를 위한 json생성기
-# 1분 마다 업데이트 중
 @app.route('/graph')
 def chart_data() :
     def generate_raw_data() :
@@ -67,13 +75,24 @@ def chart_data() :
 
             json_data = json.dumps({'time':str(raw_data["rev_date"]).split(" ")[1],'value1':raw_data["temp"],'value2':raw_data["humi"],'value3':raw_data["light"],'value4' :raw_data['rain'], 'value4_1' : rain,'value3_1': light})
             yield f"data: {json_data}\n\n"
-            time.sleep(61)
+            sleep(61)
 
     return Response(generate_raw_data(), mimetype='text/event-stream')
 
+@app.route('/actuator', methods = ['POST', 'GET'])
+def actuator():
+    if request.method == 'POST':
+        val1 = None
+        val2 = float(request.form['length'])
+        if request.form['button'] == 'close':
+            val1 = 'down'
+        elif request.form['button'] == 'open':
+            val1 = 'up'
+        mq_ac = mqtt_actuator(val1, val2)
+        mq_ac.main()
+    return render_template('index.html')
 
-# 전체 데이터를 DB에서 뽑아옴
-'''
+    '''
 @app.route('/graph2')
 def chart_data2() :
     def generate_raw_data2() :
@@ -88,11 +107,14 @@ def chart_data2() :
             json_data = json.dumps({'date':str(raw_data["rev_date"]).split(" ")[0],'time':str(raw_data["rev_date"]).split(" ")[1],'value1':raw_data["temp"],'value2':raw_data["humi"],'num':n})
             yield f"data: {json_data}\n\n"
         time.sleep(300)
-     
+    
     return Response(generate_raw_data2(), mimetype='text/event-stream')
 '''
+
 if __name__ == '__main__' :
-    app.run(host= "0.0.0.0", debug=True, port=9999, threaded = True)
-
-
-
+    temp = Sensor()
+    temp.daemon = False
+    temp.start()
+    kwargs = {'host': "0.0.0.0", 'port':'9999', 'threaded':True, 'debug':False}
+    flaskThread = Thread(target=app.run, daemon=True, kwargs=kwargs).start()
+    # app.run(host= "0.0.0.0", debug=True, port=9999, threaded = True)
