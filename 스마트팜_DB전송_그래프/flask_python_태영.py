@@ -1,5 +1,5 @@
-#import paho.mqtt.client as mqtt
-#import pymongo
+import paho.mqtt.client as mqtt
+import pymongo
 
 from flask import *
 from pymongo import MongoClient
@@ -8,6 +8,13 @@ from datetime import datetime, timedelta
 import json
 import time
 
+from serial import Serial
+from time import time
+from time import sleep
+from datetime import datetime
+import sys
+
+from mqtt_send import mqtt_actuator
 
 app = Flask(__name__)
 
@@ -40,39 +47,37 @@ def graph() :
 
         results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1)
 
-        return render_template('index.html',data=results,start_date = send_start_date ,end_date = send_end_date)
+        return render_template('graph.html',data=results,start_date = send_start_date ,end_date = send_end_date)
     if request.method == 'GET':
-        return render_template('index.html')
+        return render_template('graph.html')
 
 # 실시간 그래프를 위한 json생성기
-# 1분 마다 업데이트 중
 @app.route('/graph')
 def chart_data() :
     def generate_raw_data() :
         while True :
             raw_data = db_col.find().sort("_id",-1).limit(1)[0]
             #print(f'날짜+시간: {raw_data["rev_date"]} 온도 : {raw_data["temp"]}  습도 : {raw_data["humi"]}')
-
-            # 빗물 감지 센서 => 비오는 여부 판단
-            if int(raw_data['rain']) < 1000 :
-                rain = "빗물 감지"
-            else :
-                rain = "빗물 미 감지"
-
-            # 조도 센서 => 밤낮 여부 확인
-            if int(raw_data["light"]) > 550 :
-                light = "밝음"
-            else : 
-                light = "어두움"
-
-            json_data = json.dumps({'time':str(raw_data["rev_date"]).split(" ")[1],'value1':raw_data["temp"],'value2':raw_data["humi"],'value3':raw_data["light"],'value4' :raw_data['rain'], 'value4_1' : rain,'value3_1': light})
+            
+            json_data = json.dumps({'time':str(raw_data["rev_date"]).split(" ")[1],'value1':raw_data["temp"],'value2':raw_data["humi"]})
             yield f"data: {json_data}\n\n"
             time.sleep(61)
 
     return Response(generate_raw_data(), mimetype='text/event-stream')
 
+@app.route('/actuator', methods = ['POST', 'GET'])
+def actuator():
+    if request.method == 'POST':
+        val1 = None
+        val2 = float(request.form['length'])
+        if request.form['button'] == 'close':
+            val1 = 'down'
+        elif request.form['button'] == 'open':
+            val1 = 'up'
+        mq_ac = mqtt_actuator(val1, val2)
+        mq_ac.main()
+    return render_template('graph.html')
 
-# 전체 데이터를 DB에서 뽑아옴
 '''
 @app.route('/graph2')
 def chart_data2() :
@@ -91,6 +96,7 @@ def chart_data2() :
      
     return Response(generate_raw_data2(), mimetype='text/event-stream')
 '''
+
 if __name__ == '__main__' :
     app.run(host= "0.0.0.0", debug=True, port=9999, threaded = True)
 

@@ -17,6 +17,7 @@
         <link href = "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
         <link href = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" rel = "stylesheet">
         <script src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+        
         <script src = "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
         <script src ="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
     </head>
@@ -130,7 +131,7 @@
                         <div class="row">
                             <div class="col-xl-3 col-md-6">
                                 <div class="card border-secondary text-black mb-4">
-                                    <div class="card-body">(온도, 습도) 센서</div>
+                                    <div class="card-body"><h6 style="display:inline;" id="temp_humi_sensor" style="color:black;">temp_humi_sensor</h6></div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
                                         <a class="small text-black stretched-link" href="#">View Details</a>
                                         <div class="small text-black"><i class="fas fa-angle-right"></i></div>
@@ -139,7 +140,8 @@
                             </div>
                             <div class="col-xl-3 col-md-6">
                                 <div class="card border-secondary text-black mb-4">
-                                    <div class="card-body">없음</div>
+                                    <div class="card-body"><h6 style="display:inline;" id="light_sensor" style="color:black;">light_sensor</h6></div>
+                                    
                                     <div class="card-footer d-flex align-items-center justify-content-between">
                                         <a class="small text-black stretched-link" href="#">View Details</a>
                                         <div class="small text-black"><i class="fas fa-angle-right"></i></div>
@@ -148,7 +150,7 @@
                             </div>
                             <div class="col-xl-3 col-md-6">
                                 <div class="card border-secondary text-black mb-4">
-                                    <div class="card-body">없음</div>
+                                    <div class="card-body"><h6 style="display:inline;" id="rain_sensor" style="color:black;">rain_sensor</h6></div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
                                         <a class="small text-black stretched-link" href="#">View Details</a>
                                         <div class="small text-black"><i class="fas fa-angle-right"></i></div>
@@ -379,6 +381,10 @@
                     config.data.datasets[0].data.push(data.value1);
                     config.data.datasets[1].data.push(data.value2);
                     lineChart.update();
+                    
+                    $("#temp_humi_sensor").text("온도센서 값 : "+data.value1 + " / 습도센서 값: " + data.value2);
+                    $("#light_sensor").text("조도센서 값 : "+data.value3+" => "+data.value3_1);
+                    $("#rain_sensor").text("빗물 감지 센서 값 : "+data.value4+" => "+data.value4_1);
                 }
             });
         </script>
@@ -464,7 +470,6 @@
                     config.data.datasets[0].data.push(data.value1);
                     config.data.datasets[1].data.push(data.value2);
                     lineChart.update();
-                    
                 }
             });
         </script>
@@ -502,5 +507,7 @@
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
         integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
         crossorigin="anonymous"></script>
+
+        
     </body>
 </html>
