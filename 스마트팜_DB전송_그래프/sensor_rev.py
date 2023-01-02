@@ -39,29 +39,36 @@ class Sensor(threading.Thread):
             
             # 클라이언트에서 받아온 값을 디코딩
             data_split =str(msg.payload.decode("utf-8")).split(" ")
-            
-            # 데이터를 수신 받은 시간
-            now = datetime.now()
-            time = now.strftime('%Y-%m-%d %H:%M:%S')
-            data_rev_date = now.strptime(time,'%Y-%m-%d %H:%M:%S')
-            
-            
-            # 값 분배
-            data = {
-                    "rev_date" : data_rev_date,
-                    "temp": data_split[0],
-                    "humi": data_split[1],
-                    "light" : data_split[2],
-                    "rain" : data_split[3],
-                }
-            # 조도센서는 불켜졌을때와 안켜졌을때를 값을 확인해서 (0,1)로 보내도록 함
 
-            # DB에 data 저장
-            collection.insert_one(data)
-            print(f"{data_rev_date} => Data 저장 성공")
-            #sleep(60)
-            print(str(msg.payload.decode("utf-8")))
-            #print(data)
+            #print(len(data_split))
+
+            if len(data_split) < 4 :
+                print(f"물주기 모터")
+                pass
+            else :
+                # 데이터를 수신 받은 시간
+                now = datetime.now()
+                time = now.strftime('%Y-%m-%d %H:%M:%S')
+                data_rev_date = now.strptime(time,'%Y-%m-%d %H:%M:%S')
+                
+                
+                
+                # 값 분배
+                data = {
+                        "rev_date" : data_rev_date,
+                        "temp": data_split[0],
+                        "humi": data_split[1],
+                        "light" : data_split[2],
+                        "rain" : data_split[3],
+                    }
+                # 조도센서는 불켜졌을때와 안켜졌을때를 값을 확인해서 (0,1)로 보내도록 함
+
+                # DB에 data 저장
+                collection.insert_one(data)
+                print(f"{data_rev_date} => Data 저장 성공")
+                #sleep(60)
+                print(str(msg.payload.decode("utf-8")))
+                #print(data)
         
         # 새로운 클라이언트 생성
         client = mqtt.Client()

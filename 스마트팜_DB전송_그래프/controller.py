@@ -1,9 +1,11 @@
 from pickle import TRUE
 import paho.mqtt.client as mqtt
 
-class mqtt_actuator:
-    def __init__(self, val1, val2):
-        self.text = str(val1) + " " + str(val2)
+class mqtt_controller:
+    def __init__(self, val, topic):
+        # self.text = "actuator" + str(val1) + " " + str(val2)
+        self.val = val
+        self.topic = topic
 
     def main(self):        
         def on_connect(client, userdata, flags, rc):
@@ -38,7 +40,7 @@ class mqtt_actuator:
         # port: 1883 에 연결
         client.connect('broker.hivemq.com', 1883)
         client.loop_start()
-        client.publish('test/actuator', str(self.text), 1)
+        client.publish(self.topic, str(self.val), 1)
         client.loop_stop()
 
         # 연결 종료

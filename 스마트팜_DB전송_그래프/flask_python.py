@@ -10,7 +10,7 @@ import json
 from time import time
 from time import sleep
 
-from actuator_send import mqtt_actuator
+from controller import mqtt_controller
 from sensor_rev import Sensor
 
 from threading import Thread
@@ -37,21 +37,70 @@ def date_range(start, end):
 @app.route('/',methods=['POST','GET'])
 def graph() :
     if request.method == 'POST':
-        # if request.form['inquiry'] == "조회":
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
 
-        start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        end_date = datetime.strptime(end_date, "%Y-%m-%d")
-        send_end_date = str(end_date).split(" ")[0]
-        send_start_date = str(start_date).split(" ")[0]
-        end_date = end_date+timedelta(days=1)
+        # if request.form['inquiry'] == "조회":
+        try :
+            start_date = request.form['start_date']
+            end_date = request.form['end_date']
+
+            start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date, "%Y-%m-%d")
+            
+            send_end_date = str(end_date).split(" ")[0]
+            send_start_date = str(start_date).split(" ")[0]
+
+            end_date = end_date+timedelta(days=1)
+        except :
+            start_date = datetime.today().strftime("%Y-%m-%d")
+            end_date = datetime.today().strftime("%Y-%m-%d")
+
+            start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
+            send_end_date = str(start_date).split(" ")[0]
+            send_start_date = str(end_date).split(" ")[0]
+            
+            end_date = end_date+timedelta(days=1)
+
+        try :
+            val1 = None
+            val2 = float(request.form['length'])
+
+            if request.form['button'] == 'close':
+                val1 = 'down'
+            elif request.form['button'] == 'open':
+                val1 = 'up'
+            val = val1 +" "+ val2
+            mq_ac = mqtt_controller(val,'test/actuator')
+            mq_ac.main()
+
+        except :
+            pass
+
+        try :
+            val = int(request.form['water_active'])
+
+            if request.form['button'] == '물 주기':
+                mq_ac = mqtt_controller(val, 'test/send_data')
+                mq_ac.main()
+                print("물 주기")
+
+        except :
+            pass
 
         results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1)
         return render_template('index.html',data=results,start_date = send_start_date ,end_date = send_end_date)
 
     if request.method == 'GET':
-        return render_template('index.html')
+        start_date = datetime.today().strftime("%Y-%m-%d")
+        end_date = datetime.today().strftime("%Y-%m-%d")
+
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        end_date = end_date+timedelta(days=1)
+
+        results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1)
+        return render_template('index.html',data=results,start_date = "The newest data" ,end_date = "today")
 
 # 실시간 그래프를 위한 json생성기
 @app.route('/graph')
@@ -79,18 +128,18 @@ def chart_data() :
 
     return Response(generate_raw_data(), mimetype='text/event-stream')
 
-@app.route('/actuator', methods = ['POST', 'GET'])
-def actuator():
-    if request.method == 'POST':
-        val1 = None
-        val2 = float(request.form['length'])
-        if request.form['button'] == 'close':
-            val1 = 'down'
-        elif request.form['button'] == 'open':
-            val1 = 'up'
-        mq_ac = mqtt_actuator(val1, val2)
-        mq_ac.main()
-    return render_template('index.html')
+# @app.route('/actuator', methods = ['POST', 'GET'])
+# def actuator():
+#     if request.method == 'POST':
+#         val1 = None
+#         val2 = float(request.form['length'])
+#         if request.form['button'] == 'close':
+#             val1 = 'down'
+#         elif request.form['button'] == 'open':
+#             val1 = 'up'
+#         mq_ac = mqtt_actuator(val1, val2)
+#         mq_ac.main()
+#     return render_template('index.html')
 
     '''
 @app.route('/graph2')
@@ -112,9 +161,11 @@ def chart_data2() :
 '''
 
 if __name__ == '__main__' :
+
     temp = Sensor()
     temp.daemon = False
     temp.start()
+
     kwargs = {'host': "0.0.0.0", 'port':'9999', 'threaded':True, 'debug':False}
     flaskThread = Thread(target=app.run, daemon=True, kwargs=kwargs).start()
     # app.run(host= "0.0.0.0", debug=True, port=9999, threaded = True)

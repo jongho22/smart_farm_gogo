@@ -22,7 +22,7 @@
         <script src ="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
 
         <style>
-            .window_open, .window_close, #length{
+            .window_open, .window_close, #length, #water{
                 margin-left: 5px;
                 margin-right: 5px;
                 border-top-right-radius: 5px;
@@ -44,7 +44,7 @@
                 background-color: skyblue;
             }
 
-            #length{
+            #length, #water{
                 font-size:1rem;
             }
         </style>
@@ -218,13 +218,19 @@
                             <div class="col-xl-6">
                                 <div class="card mb-4">
                                     <div class="card-header">
-                                        <i class="fas fa-chart-bar me-1"></i>
-                                        창문 환기 시스템 (Unit => mm)
-                                        <form action="/actuator" method="POST">
-                                            <input class="window_close" type="submit" name="button" value="close"/>
-                                            <input class="window_open" type="submit" name="button" value="open"/>
-                                            <input type="text" id="length" name="length" minlength="1" maxlength="3" size = "5" value=""/>
-                                        </form>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <i class="fas fa-chart-bar me-1"></i>
+                                                창문 환기 시스템 (Unit => mm)
+                                            </div>
+                                            <div class="col-6">
+                                                <form action="/" method="POST">
+                                                    <input class="window_close" type="submit" name="button" value="close"/>
+                                                    <input class="window_open" type="submit" name="button" value="open"/>
+                                                    <input type="text" id="length" name="length" minlength="1" maxlength="3" size = "5" value=""/>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="card-body">
                                         현재상태
@@ -234,10 +240,22 @@
                             <div class="col-xl-6">
                                 <div class="card mb-4">
                                     <div class="card-header">
-                                        <i class="fas fa-chart-bar me-1"></i>
-                                        없음
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <i class="fas fa-chart-bar me-1"></i>
+                                                급수 시스템
+                                            </div>
+                                            <div class="col-6">
+                                                <form action="/" method="POST">
+                                                    <input class="window_open" type="submit" name="button" value="물 주기"/>
+                                                    <input type="text" id="water" name="water_active" minlength="1" maxlength="3" size = "5" value=""/>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="card-body"><canvas id="myBarChart" width="100%" height="40"></canvas></div>
+                                    <div class="card-body">
+                                        현재상태
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-xl-6">
@@ -277,7 +295,7 @@
                                                     마지막 날짜 : 
                                                     <input type="date" name='end_date' id="end_date"/>
                                                     &nbsp;
-                                                    <input class="btn btn-outline-success" type="submit" name="inquiry" value="조회"></button>
+                                                    <button class="btn btn-outline-success" type="submit">조회</button>
                                                 </div>
                                                 
                                             </div>
