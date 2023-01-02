@@ -1,6 +1,6 @@
 import paho.mqtt.client as mqtt
 import pymongo
-
+import math
 from flask import *
 from pymongo import MongoClient
 from datetime import datetime, timedelta
@@ -36,8 +36,13 @@ def date_range(start, end):
 # 메인 페이지
 @app.route('/',methods=['POST','GET'])
 def graph() :
-    if request.method == 'POST':
+    limit = 10
+    block_size = 10
+    
 
+    if request.method == 'POST':
+        page = request.args.get('page', type=int, default=1)  # 페이지
+        #page = request.args.get("page", 1, type=int)
         # if request.form['inquiry'] == "조회":
         try :
             start_date = request.form['start_date']
@@ -50,7 +55,7 @@ def graph() :
             send_start_date = str(start_date).split(" ")[0]
 
             end_date = end_date+timedelta(days=1)
-        except :
+        except : 
             start_date = datetime.today().strftime("%Y-%m-%d")
             end_date = datetime.today().strftime("%Y-%m-%d")
 
@@ -64,13 +69,15 @@ def graph() :
 
         try :
             val1 = None
-            val2 = float(request.form['length'])
+            val2 = str(request.form['length'])
 
             if request.form['button'] == 'close':
                 val1 = 'down'
             elif request.form['button'] == 'open':
                 val1 = 'up'
+
             val = val1 +" "+ val2
+            print(val)
             mq_ac = mqtt_controller(val,'test/actuator')
             mq_ac.main()
 
@@ -88,10 +95,20 @@ def graph() :
         except :
             pass
 
-        results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1)
-        return render_template('index.html',data=results,start_date = send_start_date ,end_date = send_end_date)
+        results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1).limit(limit)
+        total_data  = db_col.count_documents({})
+
+        last_page_num = math.ceil(total_data / limit) # 반드시 올림을 해줘야함
+        block_num = int((page - 1) / block_size)
+        block_start = (block_size * block_num) + 1
+        block_end = block_start + (block_size - 1)
+
+        return render_template('index.html',data=results,start_date = send_start_date ,end_date = send_end_date,limit=limit,page=page,block_start=block_start,block_end=block_end,last_page_num=last_page_num)
 
     if request.method == 'GET':
+
+        page = request.args.get('page', type=int, default=1)  # 페이지
+        # DB 전체 데이터 날짜 처리
         start_date = datetime.today().strftime("%Y-%m-%d")
         end_date = datetime.today().strftime("%Y-%m-%d")
 
@@ -99,8 +116,15 @@ def graph() :
         end_date = datetime.strptime(end_date, "%Y-%m-%d")
         end_date = end_date+timedelta(days=1)
 
-        results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1)
-        return render_template('index.html',data=results,start_date = "The newest data" ,end_date = "today")
+        results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1).limit(limit)
+        total_data  = db_col.count_documents({})
+        
+        last_page_num = math.ceil(total_data / limit) # 반드시 올림을 해줘야함
+        block_num = int((page - 1) / block_size)
+        block_start = (block_size * block_num) + 1
+        block_end = block_start + (block_size - 1)
+
+        return render_template('index.html',data=results,start_date = "The newest data" ,end_date = "today",limit=limit,page=page,block_start=block_start,block_end=block_end,last_page_num=last_page_num)
 
 # 실시간 그래프를 위한 json생성기
 @app.route('/graph')

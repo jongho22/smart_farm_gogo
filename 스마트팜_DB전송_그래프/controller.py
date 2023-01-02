@@ -3,7 +3,6 @@ import paho.mqtt.client as mqtt
 
 class mqtt_controller:
     def __init__(self, val, topic):
-        # self.text = "actuator" + str(val1) + " " + str(val2)
         self.val = val
         self.topic = topic
 
