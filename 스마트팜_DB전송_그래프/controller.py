@@ -6,7 +6,16 @@ class mqtt_controller:
         self.val = val
         self.topic = topic
 
-    def main(self):        
+    def __enter__(self):
+        print("start.")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("end.")
+
+    def main(self):
+
+
         def on_connect(client, userdata, flags, rc):
             # 연결이 성공적으로 된다면 완료 메세지 출력
             if rc == 0:

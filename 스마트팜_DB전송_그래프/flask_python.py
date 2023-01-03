@@ -78,8 +78,10 @@ def graph() :
 
             val = val1 +" "+ val2
             print(val)
-            mq_ac = mqtt_controller(val,'test/actuator')
-            mq_ac.main()
+            with mqtt_controller(val,'test/actuator') as m:
+                m.main()
+            # mq = mqtt_controller(val,'test/actuator')
+            # mq.main()
 
         except :
             pass
@@ -88,9 +90,11 @@ def graph() :
             val = int(request.form['water_active'])
 
             if request.form['button'] == '물 주기':
-                mq_ac = mqtt_controller(val, 'test/send_data')
-                mq_ac.main()
-                print("물 주기")
+                with mqtt_controller(val, 'test/send_data') as m:
+                    m.main()
+                    print("물 주기")
+                # mq = mqtt_controller(val,'test/send_data')
+                # mq.main()
 
         except :
             pass
