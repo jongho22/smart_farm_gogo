@@ -11699,3 +11699,28 @@ body {
   font-size: 0.75rem;
   border-radius: 0.25rem !important;
 }
+.window_open, .window_close, #length, #water{
+  margin-left: 5px;
+  margin-right: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  float : right;
+}
+.card-header input{
+border: 0.1px solid black;
+background-color: rgba(0,0,0,0);
+color: black;
+padding: 5px;
+font-size: 1rem;
+font-weight: bolder;
+}
+
+.card-header input:active{
+  background-color: skyblue;
+}
+
+#length, #water{
+  font-size:1rem;
+}

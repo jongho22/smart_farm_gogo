@@ -1,73 +1,43 @@
-import paho.mqtt.client as mqtt
-import pymongo
-import math
 from flask import *
 from pymongo import MongoClient
 from datetime import datetime, timedelta
-
-import json
-
-from time import time
 from time import sleep
-
 from controller import mqtt_controller
 from sensor_rev import Sensor
-
 from threading import Thread
 
-#센서 mqtt
+import json, math
+
+
 
 app = Flask(__name__)
 
+# 몽고 DB 연결
 my_client = MongoClient("mongodb://localhost:27017/")
 
 db = my_client['test_db']
 db_col = db.test_data
 
-def date_range(start, end):
-    try :
-        start = datetime.strptime(start, "%Y-%m-%d")
-        end = datetime.strptime(end, "%Y-%m-%d")
-        dates = [(start + timedelta(days=i)).strftime("%Y-%m-%d") for i in range((end-start).days+1)]
-    except :
-        dates = []
-    return dates
-
 # 메인 페이지
 @app.route('/',methods=['POST','GET'])
 def graph() :
-    limit = 10
-    block_size = 10
+    limit = 10 # DB 테이블 몇개 보여줄지
+    block_size = 10 # 페이지네이션 블럭 개수
     
-
     if request.method == 'POST':
         page = request.args.get('page', type=int, default=1)  # 페이지
-        #page = request.args.get("page", 1, type=int)
-        # if request.form['inquiry'] == "조회":
-        try :
+        
+        try : # DB 조회 버튼을 눌렀을때
             start_date = request.form['start_date']
             end_date = request.form['end_date']
-
-            start_date = datetime.strptime(start_date, "%Y-%m-%d")
-            end_date = datetime.strptime(end_date, "%Y-%m-%d")
             
-            send_end_date = str(end_date).split(" ")[0]
-            send_start_date = str(start_date).split(" ")[0]
+        except : # DB 조회 버튼을 누르지 않았을때
+            today = datetime.today()
+            start_date = db_col.find_one()['rev_date']
+            start_date = str(start_date).split(" ")[0]
+            end_date = (today+timedelta(days=1)).strftime("%Y-%m-%d")
 
-            end_date = end_date+timedelta(days=1)
-        except : 
-            start_date = datetime.today().strftime("%Y-%m-%d")
-            end_date = datetime.today().strftime("%Y-%m-%d")
-
-            start_date = datetime.strptime(start_date, "%Y-%m-%d")
-            end_date = datetime.strptime(end_date, "%Y-%m-%d")
-
-            send_end_date = str(start_date).split(" ")[0]
-            send_start_date = str(end_date).split(" ")[0]
-            
-            end_date = end_date+timedelta(days=1)
-
-        try :
+        try : # 창문 환기 시스템에 값을 전달 헀을때
             val1 = None
             val2 = str(request.form['length'])
 
@@ -80,55 +50,49 @@ def graph() :
             print(val)
             with mqtt_controller(val,'test/actuator') as m:
                 m.main()
-            # mq = mqtt_controller(val,'test/actuator')
-            # mq.main()
 
-        except :
+        except : # 창문 환기 시스템에 값을 전달하지 않았을때
             pass
 
-        try :
+        try : # 수중 모터(물주기)를 작동시켰을때
             val = int(request.form['water_active'])
 
             if request.form['button'] == '물 주기':
                 with mqtt_controller(val, 'test/send_data') as m:
                     m.main()
                     print("물 주기")
-                # mq = mqtt_controller(val,'test/send_data')
-                # mq.main()
 
-        except :
+        except : # 수중 모터(물주기)를 작동시키지 않았을때
             pass
 
-        results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1).limit(limit)
-        total_data  = db_col.count_documents({})
-
-        last_page_num = math.ceil(total_data / limit) # 반드시 올림을 해줘야함
-        block_num = int((page - 1) / block_size)
-        block_start = (block_size * block_num) + 1
-        block_end = block_start + (block_size - 1)
-
-        return render_template('index.html',data=results,start_date = send_start_date ,end_date = send_end_date,limit=limit,page=page,block_start=block_start,block_end=block_end,last_page_num=last_page_num)
-
     if request.method == 'GET':
+        today = datetime.today()
+        start_date = db_col.find_one()['rev_date']
+        start_date = str(start_date).split(" ")[0]
+        end_date = (today+timedelta(days=1)).strftime("%Y-%m-%d")
 
+        start_date = request.args.get('start_date', type=str, default=start_date)
+        end_date = request.args.get('end_date', type=str, default=end_date)
         page = request.args.get('page', type=int, default=1)  # 페이지
-        # DB 전체 데이터 날짜 처리
-        start_date = datetime.today().strftime("%Y-%m-%d")
-        end_date = datetime.today().strftime("%Y-%m-%d")
 
-        start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        end_date = datetime.strptime(end_date, "%Y-%m-%d")
-        end_date = end_date+timedelta(days=1)
+    # DB 조회를 위한 날짜 처리    
+    start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
-        results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1).limit(limit)
-        total_data  = db_col.count_documents({})
-        
-        last_page_num = math.ceil(total_data / limit) # 반드시 올림을 해줘야함
-        block_num = int((page - 1) / block_size)
-        block_start = (block_size * block_num) + 1
-        block_end = block_start + (block_size - 1)
+    send_start_date = str(start_date).split(" ")[0]
+    send_end_date = str(end_date).split(" ")[0]
 
-        return render_template('index.html',data=results,start_date = "The newest data" ,end_date = "today",limit=limit,page=page,block_start=block_start,block_end=block_end,last_page_num=last_page_num)
+    # 해당 날짜의 데이터를 DB에서 가져오기
+    results = db_col.find({"rev_date": {"$gte": start_date, "$lte": end_date}}).sort("_id",-1).skip((page-1)*limit).limit(limit)
+    total_data  = db_col.count_documents({})
+    
+    # 페이지네이션 처리
+    last_page_num = math.ceil(total_data / limit) 
+    block_num = int((page - 1) / block_size)
+    block_start = (block_size * block_num) + 1
+    block_end = block_start + (block_size - 1)
+
+    return render_template('index.html',data=results,start_date = send_start_date ,end_date = send_end_date,limit=limit,page=page,block_start=block_start,block_end=block_end,last_page_num=last_page_num,total_data=total_data)
 
 # 실시간 그래프를 위한 json생성기
 @app.route('/graph')
@@ -156,20 +120,7 @@ def chart_data() :
 
     return Response(generate_raw_data(), mimetype='text/event-stream')
 
-# @app.route('/actuator', methods = ['POST', 'GET'])
-# def actuator():
-#     if request.method == 'POST':
-#         val1 = None
-#         val2 = float(request.form['length'])
-#         if request.form['button'] == 'close':
-#             val1 = 'down'
-#         elif request.form['button'] == 'open':
-#             val1 = 'up'
-#         mq_ac = mqtt_actuator(val1, val2)
-#         mq_ac.main()
-#     return render_template('index.html')
-
-    '''
+''' 전체 DB 조회 그래프 만들다가 실패
 @app.route('/graph2')
 def chart_data2() :
     def generate_raw_data2() :

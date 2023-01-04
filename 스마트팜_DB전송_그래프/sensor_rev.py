@@ -65,7 +65,7 @@ class Sensor(threading.Thread):
 
                 # DB에 data 저장
                 collection.insert_one(data)
-                print(f"{data_rev_date} => Data 저장 성공")
+                #print(f"{data_rev_date} => Data 저장 성공")
                 #sleep(60)
                 print(str(msg.payload.decode("utf-8")))
                 #print(data)
