@@ -36,7 +36,8 @@ class Sensor(threading.Thread):
 
 
         def on_message(client, userdata, msg):
-            
+
+            #sleep(60)
             # 클라이언트에서 받아온 값을 디코딩
             data_split =str(msg.payload.decode("utf-8")).split(" ")
 
@@ -66,7 +67,6 @@ class Sensor(threading.Thread):
                 # DB에 data 저장
                 collection.insert_one(data)
                 #print(f"{data_rev_date} => Data 저장 성공")
-                #sleep(60)
                 print(str(msg.payload.decode("utf-8")))
                 #print(data)
         

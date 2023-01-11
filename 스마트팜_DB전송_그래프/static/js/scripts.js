@@ -107,6 +107,10 @@ $(document).ready(function() {
         $("#temp_humi_sensor").text("온도센서 값 : "+data.value1 + " / 습도센서 값: " + data.value2);
         $("#light_sensor").text("조도센서 값 : "+data.value3+" => "+data.value3_1);
         $("#rain_sensor").text("빗물 감지 센서 값 : "+data.value4+" => "+data.value4_1);
+        $("#temp_sensor_2").text(data.value1);
+        $("#humi_sensor_2").text(data.value2+"%");
+        $("#light_sensor_2").text(data.value3);
+        $("#rain_sensor_2").text(data.value4);
     }
 });
 
@@ -114,16 +118,48 @@ $(document).ready(function() {
     const config ={
         type: 'doughnut',
         data : {
-            labels: ['온도센서','습도센서','조도센서', '빗물감지 센서'],
+            labels: ['조도센서','남은 센서 값'],//['온도센서','습도센서','조도센서', '빗물감지 센서'],
             datasets: [{
                 data: [],
-                backgroundColor: ['rgb(255,51,51)','rgb(51,153,255)','rgb(255, 255, 51)', 'rgb(204, 229, 255)'],
+                backgroundColor: ['rgb(255, 255, 51)','rgb(230,230,230)'],//,'rgb(255, 255, 51)', 'rgb(204, 229, 255)'],
                 borderColor : 'rgb(150,150,150)',
             }],
         },
         options: {
             responsive: false,
-            cutoutPercentage : 70,
+            cutoutPercentage : 50,
+        },
+    };
+    const context = document.getElementById('canvas4').getContext('2d');
+    const lineChart = new Chart(context, config);
+    const source = new EventSource("/graph")
+
+    source.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+       
+        config.data.datasets[0].data.pop();
+        config.data.datasets[0].data.pop();
+        
+        config.data.datasets[0].data.push(data.value3,1200-data.value3)//,data.value3,data.value4);
+        
+        lineChart.update();
+    }
+});
+
+$(document).ready(function() {
+    const config ={
+        type: 'doughnut',
+        data : {
+            labels: ['온도센서','남은 센서 값'],//['온도센서','습도센서','조도센서', '빗물감지 센서'],
+            datasets: [{
+                data: [],
+                backgroundColor: ['rgb(255,51,51)','rgb(230,230,230)'],//,'rgb(255, 255, 51)', 'rgb(204, 229, 255)'],
+                borderColor : 'rgb(150,150,150)',
+            }],
+        },
+        options: {
+            responsive: false,
+            cutoutPercentage : 50,
         },
     };
     const context = document.getElementById('canvas2').getContext('2d');
@@ -135,10 +171,72 @@ $(document).ready(function() {
        
         config.data.datasets[0].data.pop();
         config.data.datasets[0].data.pop();
+        
+        config.data.datasets[0].data.push(data.value1,50-data.value1)//,data.value3,data.value4);
+        
+        lineChart.update();
+    }
+});
+
+$(document).ready(function() {
+    const config ={
+        type: 'doughnut',
+        data : {
+            labels: ['습도센서','남은 센서 값'],//['온도센서','습도센서','조도센서', '빗물감지 센서'],
+            datasets: [{
+                data: [],
+                backgroundColor: ['rgb(51,153,255)','rgb(230,230,230)'],//,'rgb(255, 255, 51)', 'rgb(204, 229, 255)'],
+                borderColor : 'rgb(150,150,150)',
+            }],
+        },
+        options: {
+            responsive: false,
+            cutoutPercentage : 50,
+        },
+    };
+    const context = document.getElementById('canvas3').getContext('2d');
+    const lineChart = new Chart(context, config);
+    const source = new EventSource("/graph")
+
+    source.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+       
         config.data.datasets[0].data.pop();
         config.data.datasets[0].data.pop();
-           
-        config.data.datasets[0].data.push(data.value1,data.value2,data.value3,data.value4);
+        
+        config.data.datasets[0].data.push(data.value2,80-data.value2)//,data.value3,data.value4);
+        
+        lineChart.update();
+    }
+});
+
+$(document).ready(function() {
+    const config ={
+        type: 'doughnut',
+        data : {
+            labels: ['빗물감지 센서','남은 센서 값'],//['온도센서','습도센서','조도센서', '빗물감지 센서'],
+            datasets: [{
+                data: [],
+                backgroundColor: ['rgb(204, 229, 255)','rgb(230,230,230)'],//,'rgb(255, 255, 51)', 'rgb(204, 229, 255)'],
+                borderColor : 'rgb(150,150,150)',
+            }],
+        },
+        options: {
+            responsive: false,
+            cutoutPercentage : 50,
+        },
+    };
+    const context = document.getElementById('canvas5').getContext('2d');
+    const lineChart = new Chart(context, config);
+    const source = new EventSource("/graph")
+
+    source.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+       
+        config.data.datasets[0].data.pop();
+        config.data.datasets[0].data.pop();
+        
+        config.data.datasets[0].data.push(data.value4,1023-data.value4)//,data.value3,data.value4);
         
         lineChart.update();
     }
