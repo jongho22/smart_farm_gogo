@@ -248,8 +248,6 @@ $(document).ready(function() {
         lineChart_temp.update();
         lineChart_humi.update();
         lineChart_rain.update();
-
-        //console.log(`${data_graph.value1},${data_graph.value2},${data_graph.value3},${data_graph.value4},${data_graph.value5_1}`)
         
         $("#temp_humi_sensor").text("온도센서 값 : "+data_graph.value1 + " / 습도센서 값: " + data_graph.value2);
         $("#light_sensor").text("조도센서 값 : "+data_graph.value3+" => "+data_graph.value3_1);
