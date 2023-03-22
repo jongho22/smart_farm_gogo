@@ -246,8 +246,6 @@ def chart_data() :
         else :
             water = "물 충분함"
 
-        #print(water_list)
-
         # json 형식
         json_data = json.dumps({'time':str(raw_data["rev_date"]).split(" ")[1],
         'value1':raw_data["temp"],
