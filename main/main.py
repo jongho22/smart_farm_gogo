@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 # 몽고 DB 연결
 # my_client = MongoClient("mongodb://203.252.230.243:27017/")
-my_client = MongoClient("mongodb://localhost:27017/")
+my_client = MongoClient()
 db = my_client['test_db']
 
 db_col = db.test_data
@@ -22,8 +22,6 @@ db_col_actuator = db.test_data_actuator
 db_col_images = db.test_data_images
 db_col_images_date = db.test_data_images_date
 db_col_standlight = db.test_data_standlight
-
-
 
 # 메인 페이지
 @app.route('/',methods=['POST','GET'])
@@ -201,11 +199,13 @@ def image_detail(image_date) :
         start_image_date = (image_date-timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:00")
         start_image_date = datetime.strptime(start_image_date, "%Y-%m-%d %H:%M:00")
 
-    image_data = db_col_images.find({"image_date": {"$gte": image_date, "$lte": image_date}}).sort("_id",-1) # 해당 날짜의 사진들
-    image_result = db_col_images.find({"result": {"$gte": image_date, "$lte": image_date}}).sort("_id",-1) # 병충해 여부
+    image_data = db_col_images.find({"image_date": {"$gte": start_image_date, "$lte": image_date}}).sort("_id",-1) # 해당 날짜의 사진들
+    #image_result = db_col_images.find({"result": {"$gte": start_image_date, "$lte": image_date}}).sort("_id",-1) # 병충해 여부
     sensor_data = db_col.find({"rev_date": {"$gte": start_image_date, "$lte":image_date}}).sort("_id",-1).limit(1)
+
+    #print(f'{image_data}, {image_result}, {sensor_data}')
     
-    return render_template('image_db_detail.html', data=image_data, sensor_data = sensor_data, date = image_date, image_result = image_result)
+    return render_template('image_db_detail.html', data=image_data, sensor_data = sensor_data, date = image_date)
    
 # 실시간 그래프를 위한 json생성기
 @app.route('/graph')
@@ -308,5 +308,5 @@ if __name__ == '__main__' :
 
     # 플라스크 실행
     kwargs = {'threaded':True, 'debug':True}
-    flaskThread = Thread(target=app.run(port=7777), daemon=True, kwargs=kwargs).start()
+    flaskThread = Thread(target=app.run(), daemon=True, kwargs=kwargs).start()
     # app.run(host= "0.0.0.0", debug=True, port=9999, threaded = True)
