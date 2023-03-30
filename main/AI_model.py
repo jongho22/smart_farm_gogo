@@ -32,7 +32,3 @@ class Classification:
         result = '질병' if '질병' in boolean_result else '정상' 
         
         return result
-
-        print("PREDICT DONE!")
-
-Classification('/home/smartfarm/바탕화면/smart_farm_gogo/main/static/picture/normal.jpg').predict()
