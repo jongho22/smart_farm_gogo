@@ -22,7 +22,7 @@ class mqtt_image_start:
         client.connect(host = 'broker.hivemq.com', port = 1883)    # MQTT 서버에 연결
         client.loop_start()
         client.publish(topic="/test102233",payload= "camera_start", qos= 2)  # 카메라 시작을 알려주는 데이터 전송 
-        client.publish(topic="/test102233",payload= "close", qos= 2)  # 카메라 시작을 알려주는 데이터 전송 
+        client.publish(topic="/test102233",payload= "close", qos= 2)  # 카메라 작동 완료
         client.loop_stop()
         client.disconnect()
 

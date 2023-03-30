@@ -24,7 +24,7 @@ class Image(threading.Thread):
 
         def on_connect(client, userdata, flags, rc):
             if rc == 0:
-                print("클라이언트와 연결 되었습니다.")
+                print("이미지 클라이언트와 연결 되었습니다.")
             else:
                 print("Bad connection Returned code=", rc)
 
